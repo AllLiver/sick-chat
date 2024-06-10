@@ -7,7 +7,8 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("./html/index.html")) }))
         .route("/style.css", get(css_handler))
-        .route("/htmx.min.js", get(|| async { include_str!("./html/htmx.min.js") }))
+        .route("/htmx.min.js", get(|| async { include_str!("./html/htmx/htmx.min.js") }))
+        .route("/ws.js", get(|| async { include_str!("./html/htmx/ws.js") }))
         .route("/test", post(test_handler));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
@@ -37,7 +38,7 @@ async fn css_handler() -> impl IntoResponse {
 
 async fn test_handler() -> impl IntoResponse {
     println!("TEST");
-    StatusCode::OK;
+    StatusCode::OK
 }
 
 // Code borrowed from https://github.com/tokio-rs/axum/blob/806bc26e62afc2e0c83240a9e85c14c96bc2ceb3/examples/graceful-shutdown/src/main.rs
