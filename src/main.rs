@@ -1,12 +1,14 @@
 use anyhow::{Context, Result};
-use axum::{http::{Response, StatusCode}, response::{Html, IntoResponse}, routing::get, Router};
+use axum::{http::{Response, StatusCode}, response::{Html, IntoResponse}, routing::{get, post}, Router};
 use tokio::signal;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = Router::new()
         .route("/", get(|| async { Html(include_str!("./html/index.html")) }))
-        .route("/style.css", get(css_handler));
+        .route("/style.css", get(css_handler))
+        .route("/htmx.min.js", get(|| async { include_str!("./html/htmx.min.js") }))
+        .route("/test", post(test_handler));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
         .await
@@ -22,6 +24,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
+
 async fn css_handler() -> impl IntoResponse {
     let response = Response::builder()
         .status(StatusCode::OK)
@@ -30,6 +33,11 @@ async fn css_handler() -> impl IntoResponse {
         .unwrap();
 
     response
+}
+
+async fn test_handler() -> impl IntoResponse {
+    println!("TEST");
+    StatusCode::OK;
 }
 
 // Code borrowed from https://github.com/tokio-rs/axum/blob/806bc26e62afc2e0c83240a9e85c14c96bc2ceb3/examples/graceful-shutdown/src/main.rs
