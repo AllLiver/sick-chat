@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use axum::{http::{Response, StatusCode}, response::{Html, IntoResponse}, routing::{get, post}, Router};
+use axum::{body::Body, http::{Response, StatusCode}, response::{Html, IntoResponse}, routing::{get, post}, Router};
 use tokio::signal;
 
 #[tokio::main]
@@ -8,8 +8,11 @@ async fn main() -> Result<()> {
         .route("/", get(|| async { Html(include_str!("./html/index.html")) }))
         .route("/style.css", get(css_handler))
         .route("/htmx.min.js", get(|| async { include_str!("./html/htmx/htmx.min.js") }))
+        .route("/sse.js", get(|| async { include_str!("./html/htmx/sse.js") }))
         .route("/ws.js", get(|| async { include_str!("./html/htmx/ws.js") }))
-        .route("/test", post(test_handler));
+        .route("/test", post(test_handler))
+        .route("/yipee.gif", get(yipee_handler))
+        .fallback(fallback_handler);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
         .await
@@ -31,6 +34,26 @@ async fn css_handler() -> impl IntoResponse {
         .status(StatusCode::OK)
         .header("Content-Type", "text/css")
         .body(String::from(include_str!("./html/style.css")))
+        .unwrap();
+
+    response
+}
+
+async fn yipee_handler() -> impl IntoResponse {
+    let response = Response::builder()
+        .status(StatusCode::OK)
+        .header("Content-Type", "image/gif")
+        .body(Body::from(include_bytes!("./html/img/yipee.gif").to_vec()))
+        .unwrap();
+
+    response
+}
+
+async fn fallback_handler() -> impl IntoResponse {
+    let response = Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .header("Content-Type", "text/html")
+        .body(String::from(include_str!("./html/404.html")))
         .unwrap();
 
     response
